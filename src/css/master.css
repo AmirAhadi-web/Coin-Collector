@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@keyframes popUp {
+    0%   { transform: scale(0) rotate(-10deg); opacity: 0; }
+    50%  { transform: scale(1.2) rotate(5deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes popDown {
+    0%   { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0) rotate(10deg); opacity: 0; }
+}
+
+.animate-pop-up {
+    animation: popUp 0.4s ease-out forwards;
+}
+
+.animate-pop-down {
+    animation: popDown 0.3s ease-in forwards;
+}
+
+/* یه کلاس کوچیک برای سایز موش */
+.mole {
+    font-size: 4.5rem;
+}

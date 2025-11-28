@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Whack!</title>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body class="bg-[#0f172a] min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-2xl mx-auto bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 text-center">
+
+        <div class="mb-8">
+            <h1 class="text-5xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent mb-2">
+                Coin Collector!
+            </h1>
+            <p class="text-lg text-gray-700">Click the golden coins as fast as you can!</p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-6 mb-8 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl text-white shadow-xl">
+            <div><div id="score" class="text-4xl font-bold">0</div><div class="text-sm">Score</div></div>
+            <div><div id="time" class="text-4xl font-bold">30</div><div class="text-sm">Time</div></div>
+            <div><div id="highScore" class="text-3xl font-bold">0</div><div class="text-sm">Best</div></div>
+        </div>
+
+        <button id="startBtn" class="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-2xl font-bold rounded-2xl shadow-2xl hover:shadow-2xl hover:scale-105 transition-all duration-200 mb-8">
+            Start Game
+        </button>
+
+        <div id="gameBoard" class="grid grid-cols-3 gap-8 max-w-lg mx-auto">
+
+        </div>
+
+        <div id="gameOver" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 invisible opacity-0 transition-all">
+            <div class="bg-white/98 p-12 rounded-3xl shadow-2xl text-center max-w-md w-full mx-4">
+                <h2 class="text-4xl font-bold text-gray-800 mb-6">Time's Up!</h2>
+                <p class="text-2xl mb-8">
+                    Final Score: <span id="finalScore" class="font-bold text-yellow-500 text-5xl">0</span>
+                </p>
+                <button id="restartBtn" class="px-12 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-xl font-bold rounded-xl shadow-xl hover:scale-105 transition-all">
+                    Play Again
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let score = 0, time = 30, gameActive = false, moleTimer = null, countdownTimer = null;
+        let highScore = localStorage.getItem('whackHighScore') || 0;
+        const scoreEl = document.getElementById('score');
+        const timeEl = document.getElementById('time');
+        const highScoreEl = document.getElementById('highScore');
+        const startBtn = document.getElementById('startBtn');
+        const gameBoard = document.getElementById('gameBoard');
+        const gameOverEl = document.getElementById('gameOver');
+        const finalScoreEl = document.getElementById('finalScore');
+        const restartBtn = document.getElementById('restartBtn');
+
+        highScoreEl.textContent = highScore;
+
+        function createHoles() {
+            gameBoard.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const hole = document.createElement('div');
+                hole.className = 'relative w-32 h-32 bg-gradient-to-b from-gray-900 to-black rounded-full shadow-2xl overflow-hidden border-8 border-gray-800';
+                hole.innerHTML = `<div class="absolute inset-0 bg-gradient-to-t from-amber-950/70 to-transparent"></div>`;
+                gameBoard.appendChild(hole);
+            }
+        }
+
+        function showCoin() {
+            if (!gameActive) return;
+            const holes = gameBoard.children;
+            const randomHole = holes[Math.floor(Math.random() * holes.length)];
+            if (randomHole.querySelector('img')) return;
+
+            const coin = document.createElement('img');
+            coin.src = 'https://png.pngtree.com/png-clipart/20210211/ourmid/pngtree-glossy-golden-coin-icon-png-image_2898883.jpg';
+            coin.alt = 'Coin';
+            coin.className = 'absolute inset-0 m-auto w-28 h-28 object-contain animate-pop-up cursor-pointer z-10';
+            coin.style.pointerEvents = 'auto';
+
+            coin.onclick = (e) => {
+                e.stopPropagation();
+                if (!gameActive) return;
+                score += 10;
+                scoreEl.textContent = score;
+                coin.classList.replace('animate-pop-up', 'animate-pop-down');
+                setTimeout(() => coin.remove(), 350);
+                navigator.vibrate?.(50);
+            };
+
+            randomHole.appendChild(coin);
+
+            setTimeout(() => {
+                if (coin.isConnected) {
+                    coin.classList.replace('animate-pop-up', 'animate-pop-down');
+                    setTimeout(() => coin.remove(), 350);
+                }
+            }, 900 + Math.random() * 600);
+        }
+
+        function startGame() {
+            score = 0; time = 30; gameActive = true;
+            scoreEl.textContent = '0'; timeEl.textContent = '30';
+            startBtn.textContent = 'Playing...'; startBtn.disabled = true;
+            gameBoard.classList.remove('invisible', 'opacity-0');
+            createHoles();
+
+            moleTimer = setInterval(showCoin, 750);
+            countdownTimer = setInterval(() => {
+                time--; timeEl.textContent = time;
+                if (time <= 0) endGame();
+            }, 1000);
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(moleTimer); clearInterval(countdownTimer);
+
+            if (score > highScore) {
+                highScore = score;
+                highScoreEl.textContent = highScore;
+                localStorage.setItem('whackHighScore', highScore);
+            }
+
+            finalScoreEl.textContent = score;
+            gameOverEl.classList.remove('invisible', 'opacity-0');
+            startBtn.textContent = 'Start Game'; startBtn.disabled = false;
+        }
+
+        startBtn.onclick = startGame;
+        restartBtn.onclick = () => { gameOverEl.classList.add('invisible', 'opacity-0'); startGame(); };
+        createHoles();
+    </script>
+</body>
+</html>
